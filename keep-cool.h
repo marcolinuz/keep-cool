@@ -157,6 +157,7 @@ kern_return_t SMCOpen(io_connect_t *conn);
 kern_return_t SMCClose(io_connect_t conn);
 kern_return_t SMCReadKey2(UInt32Char_t key, SMCVal_t *val,io_connect_t conn);
 
+void KCSigUSRHandler(int);
 void KCSelectAlgothitm(char, KC_Status_t *);
 double SMCGetTemperature(char *);
 kern_return_t SMCCountFans(KC_Status_t *);

@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <math.h>
 #include <IOKit/IOKitLib.h>
 #include "keep-cool.h"
@@ -37,6 +38,7 @@ struct {
 
 int g_keyInfoCacheCount = 0;
 OSSpinLock g_keyInfoSpinLock = 0;
+KC_Status_t *gbl_state = NULL;
 
 kern_return_t SMCCall2(int index, SMCKeyData_t *inputStructure, SMCKeyData_t *outputStructure, io_connect_t conn);
 
@@ -561,14 +563,14 @@ void usage(char* prog)
     printf("\nUsage:\n");
     printf("%s [options]\n", prog);
     printf("  -a <alg>   : selects fan speed computing alghoritm: (default is quadratic)\n");
-    printf("      e    -> linear: speed increments constantly between t-min and t-max,\n");
-    printf("                      this is the _Easy (or simple) approach\n");
+    printf("      s    -> linear: speed increments constantly between t-min and t-max,\n");
+    printf("                      this is the _Simple approach\n");
     printf("      c    -> logarithmic: speed increments quickly for lower temperatures\n");
     printf("                      but slowly for high temperatures, this is the\n");
     printf("                      _Conservative (or noisy) approach\n");
-    printf("      s    -> quadratic: speed increments slowly for lower temperatures\n");
+    printf("      q    -> quadratic: speed increments slowly for lower temperatures\n");
     printf("                      but quickly for high temperatures, this is the\n");
-    printf("                      _Silent or (noise-reduction) approach\n");
+    printf("                      _Quiet or (noise-reduction) approach\n");
     printf("      b    -> cubic: speed increments quickly for lower temperatures, slowly\n");
     printf("                      for mid-range temperatures and fastly for high \n");
     printf("                      temperatures, this is a _Balanced compromise between\n");
@@ -783,7 +785,7 @@ UInt16 KCCubicSpeedAlghoritm(void *structure) {
 
 void KCSelectAlgothitm(char alg, KC_Status_t *state) {
     switch (alg) {
-        case 'e':
+        case 's':
 	    state->compute_fan_speed=&KCLinearSpeedAlghoritm;
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: linear (Easy)\n");
@@ -793,7 +795,7 @@ void KCSelectAlgothitm(char alg, KC_Status_t *state) {
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: logarithmic (Conservative)\n");
             break;
-        case 's':
+        case 'q':
 	    state->compute_fan_speed=&KCQuadraticSpeedAlghoritm;
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: quadratic (Silent)\n");
@@ -802,6 +804,20 @@ void KCSelectAlgothitm(char alg, KC_Status_t *state) {
 	    state->compute_fan_speed=&KCCubicSpeedAlghoritm;
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: cubic (Balanced)\n");
+            break;
+    }
+}
+
+void KCSigUSRHandler(int sigNum) {
+    switch (sigNum) {
+        case SIGUSR1:
+	    KCSelectAlgothitm('c', gbl_state);
+            break;
+        case SIGUSR2:
+	    KCSelectAlgothitm('b', gbl_state);
+            break;
+        case SIGHUP:
+	    KCSelectAlgothitm('q', gbl_state);
             break;
     }
 }
@@ -940,6 +956,14 @@ int main(int argc, char *argv[])
             break;
 
         case OP_RUNFOREVER:
+	    gbl_state = &kc_state;
+	    if (signal(SIGHUP, KCSigUSRHandler) == SIG_ERR)
+	        printf("\ncan't catch SIGHUP\n");
+	    if (signal(SIGUSR1, KCSigUSRHandler) == SIG_ERR)
+	        printf("\ncan't catch SIGUSR1\n");
+	    if (signal(SIGUSR2, KCSigUSRHandler) == SIG_ERR)
+	        printf("\ncan't catch SIGUSR2\n");
+
 	    SMCCountFans(&kc_state);
 	    while (OP_RUNFOREVER) {
 	        kc_state.cur_temp = SMCGetTemperature(kc_state.temp_key);
