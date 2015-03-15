@@ -788,7 +788,7 @@ void KCSelectAlgothitm(char alg, KC_Status_t *state) {
         case 's':
 	    state->compute_fan_speed=&KCLinearSpeedAlghoritm;
 	    if (state->debug)
-		printf("Selected Speed Computing Algorithm: linear (Easy)\n");
+		printf("Selected Speed Computing Algorithm: linear (Simple)\n");
             break;
         case 'c':
 	    state->compute_fan_speed=&KCLogarithmicSpeedAlghoritm;
@@ -798,7 +798,7 @@ void KCSelectAlgothitm(char alg, KC_Status_t *state) {
         case 'q':
 	    state->compute_fan_speed=&KCQuadraticSpeedAlghoritm;
 	    if (state->debug)
-		printf("Selected Speed Computing Algorithm: quadratic (Silent)\n");
+		printf("Selected Speed Computing Algorithm: quadratic (Quiet)\n");
             break;
         case 'b':
 	    state->compute_fan_speed=&KCCubicSpeedAlghoritm;
