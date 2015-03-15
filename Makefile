@@ -18,8 +18,8 @@ $(EXEC) : keep-cool.c
 	$(CC) $(CFLAGS) $(INC) -o $@ $?
 
 install : $(EXEC)
-	install $(EXEC) $(PREFIX)/sbin
-	install $(PLIST) $(LAUNCHD)/$(PLIST)
+	install -d -m 0755 $(EXEC) $(PREFIX)/sbin
+	install -m 0644 $(PLIST) $(LAUNCHD)/$(PLIST)
 	launchctl load -w $(LAUNCHD)/$(PLIST)
 
 uninstall : $(EXEC)
