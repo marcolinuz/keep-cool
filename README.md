@@ -13,7 +13,8 @@ run as a service at system startup.
 
 ## Usage 
 
-./keep-cool [options]
+```bash
+keep-cool [options]
   -a <alg>   : selects fan speed computing alghoritm: (default is cubic)
       e    -> linear: speed increments constantly between t-min and t-max,
                       this is the _Easy (or simple) approach
@@ -40,6 +41,7 @@ run as a service at system startup.
   -t         : print current temperature
   -T <key>   : uses the key as sensor for the temperature (default "TCXC")
   -v         : print version
+```
 
 ### Compiling
 ```bash
