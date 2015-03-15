@@ -27,7 +27,7 @@ keep-cool [options]
       b    -> cubic: speed increments quickly for lower temperatures, slowly
                       for mid-range temperatures and fastly for high 
                       temperatures, this is a _Balanced compromise between
-                      the silent and conservative approaches
+                      the quiet and conservative approaches
   -d         : enable debug mode, dump internal state and values
   -f         : run forever (runs as daemon)
   -h         : prints this help
