@@ -44,11 +44,19 @@ keep-cool [options]
 ```
 
 ### Compiling
+
+You don't need to compile it but you can do it if you want.
+keep-cool comes already compiled and ready for use.
+
 ```bash
 make
 ```
 
 ### Installing
+
+Remember to install it using an Administrator's account. 
+The installer needs to write 2 files outside of your home directory.
+
 ```bash
 sudo make install #Installs on /usr/local/sbin
 ```
@@ -60,14 +68,21 @@ sudo make uninstall
 
 ### Running
 
+The following command simulates a temperature of 75ºC and lets you see how keep-cool works when using the cubic algorithm.
+
 ```bash
-./keep-cool -r
+./keep-cool -d -n -a b -s 75
 ```
 
 ### Output example
 
 ```
-Temperature 61.8°C
+Selected Speed Computing Algorithm: cubic (Balanced)
+Current temperature: 75.00ºC
+Number of Fans: 2
+Fan [0]: Min Speed = 0 Current Speed = 2000
+Fan [1]: Min Speed = 0 Current Speed = 2004
+Computed new fan speed: 4099
 ```
 
 ## Maintainer 
