@@ -15,7 +15,7 @@ run as a service at system startup.
 
 ```bash
 keep-cool [options]
-  -a <alg>   : selects fan speed computing alghoritm: (default is cubic)
+  -a <alg>   : selects fan speed computing alghoritm: (default is quadratic)
       e    -> linear: speed increments constantly between t-min and t-max,
                       this is the _Easy (or simple) approach
       c    -> logarithmic: speed increments quickly for lower temperatures

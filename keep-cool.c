@@ -560,7 +560,7 @@ void usage(char* prog)
     printf("NOTE: it won't harm your MAC cause it only modifies the Minimum Fan Speed.\n");
     printf("\nUsage:\n");
     printf("%s [options]\n", prog);
-    printf("  -a <alg>   : selects fan speed computing alghoritm: (default is cubic)\n");
+    printf("  -a <alg>   : selects fan speed computing alghoritm: (default is quadratic)\n");
     printf("      e    -> linear: speed increments constantly between t-min and t-max,\n");
     printf("                      this is the _Easy (or simple) approach\n");
     printf("      c    -> logarithmic: speed increments quickly for lower temperatures\n");
@@ -826,7 +826,7 @@ int main(int argc, char *argv[])
 			       {KC_SMC_DEF_SPEED,0} },
 			     (char)0,
 			     (char)0,
-			     &KCCubicSpeedAlghoritm};
+			     &KCQuadraticSpeedAlghoritm};
 
     while ((c = getopt(argc, argv, "a:Lls:nrfvdtT:m:M:")) != -1)
     {
