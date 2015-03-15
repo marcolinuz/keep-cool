@@ -87,7 +87,7 @@ Computed new fan speed: 4099
 
 ## Maintainer 
 
-Marco Casavecchia M.<marcolinuz@gmail.com>
+Marco Casavecchia M. (<marcolinuz@gmail.com>)
 
 ### Source 
 
