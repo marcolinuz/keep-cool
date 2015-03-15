@@ -16,14 +16,14 @@ run as a service at system startup.
 ```bash
 keep-cool [options]
   -a <alg>   : selects fan speed computing alghoritm: (default is quadratic)
-      e    -> linear: speed increments constantly between t-min and t-max,
-                      this is the _Easy (or simple) approach
+      s    -> linear: speed increments constantly between t-min and t-max,
+                      this is the _Simple approach
       c    -> logarithmic: speed increments quickly for lower temperatures
                       but slowly for high temperatures, this is the
                       _Conservative (or noisy) approach
-      s    -> quadratic: speed increments slowly for lower temperatures
+      q    -> quadratic: speed increments slowly for lower temperatures
                       but quickly for high temperatures, this is the
-                      _Silent or (noise-reduction) approach
+                      _Quiet or (noise-reduction) approach
       b    -> cubic: speed increments quickly for lower temperatures, slowly
                       for mid-range temperatures and fastly for high 
                       temperatures, this is a _Balanced compromise between
@@ -42,6 +42,12 @@ keep-cool [options]
   -T <key>   : uses the key as sensor for the temperature (default "TCXC")
   -v         : print version
 ```
+
+Note: When running as daemon keep-cool accepts 3 unix signals: SIGHUP, SIGUSR1 and SIGUSR2.
+These signals can switch on the fly the speed computing algorithm:
+* SIGHUP -> restores the default algorithm: quadratic
+* SIGUSR1 -> set the conservative algorithm: logarithmic
+* SIGUSR2 -> set the balanced algorithm: cubic
 
 ### Compiling
 
