@@ -574,7 +574,7 @@ void usage(char* prog)
     printf("      b    -> cubic: speed increments quickly for lower temperatures, slowly\n");
     printf("                      for mid-range temperatures and fastly for high \n");
     printf("                      temperatures, this is a _Balanced compromise between\n");
-    printf("                      the silent and conservative approaches\n");
+    printf("                      the quiet and conservative approaches\n");
     printf("  -d         : enable debug mode, dump internal state and values\n");
     printf("  -f         : run forever (runs as daemon)\n");
     printf("  -h         : prints this help\n");
