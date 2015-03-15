@@ -919,7 +919,7 @@ int main(int argc, char *argv[])
             }
         case OP_SIMULATE:
 	    if (kc_state.debug)
-	    	printf("Current temperature: %.2f\n", kc_state.cur_temp);
+	    	printf("Current temperature: %.2fºC\n", kc_state.cur_temp);
 
 	    result = SMCCountFans(&kc_state);
             if (result != kIOReturnSuccess)
@@ -950,7 +950,7 @@ int main(int argc, char *argv[])
                 }
 
 	        if (kc_state.debug)
-	    	    printf("\nCurrent temperature: %.2f\n", kc_state.cur_temp);
+	    	    printf("\nCurrent temperature: %.2fºC\n", kc_state.cur_temp);
 
 	        result = SMCCountFans(&kc_state);
                 if (result != kIOReturnSuccess)
