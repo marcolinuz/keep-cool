@@ -783,6 +783,10 @@ UInt16 KCCubicSpeedAlghoritm(void *structure) {
     return newSpeed;
 }
 
+UInt16 KCResetSpeedAlghoritm(void *structure) {
+    return (UInt16)KC_SMC_DEF_SPEED;
+}
+
 void KCSelectAlgothitm(char alg, KC_Status_t *state) {
     switch (alg) {
         case 's':
@@ -805,10 +809,34 @@ void KCSelectAlgothitm(char alg, KC_Status_t *state) {
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: cubic (Balanced)\n");
             break;
+        case 'r':
+	    state->compute_fan_speed=&KCResetSpeedAlghoritm;
+	    if (state->debug)
+		printf("Selected Reset Speed Computing Algorithm\n");
+            break;
     }
 }
 
-void KCSigUSRHandler(int sigNum) {
+void KCRegisterSignalHandler() {
+    if (signal(SIGHUP, KCSigHandler) == SIG_ERR)
+	printf("\ncan't catch SIGHUP\n");
+    if (signal(SIGUSR1, KCSigHandler) == SIG_ERR)
+	printf("\ncan't catch SIGUSR1\n");
+    if (signal(SIGUSR2, KCSigHandler) == SIG_ERR)
+	printf("\ncan't catch SIGUSR2\n");
+    if (signal(SIGINT, KCSigHandler) == SIG_ERR)
+	printf("\ncan't catch SIGINT\n");
+    if (signal(SIGTERM, KCSigHandler) == SIG_ERR)
+	printf("\ncan't catch SIGTERM\n");
+    if (signal(SIGQUIT, KCSigHandler) == SIG_ERR)
+	printf("\ncan't catch SIGQUIT\n");
+    if (signal(SIGABRT, KCSigHandler) == SIG_ERR)
+	printf("\ncan't catch SIGABRT\n");
+}
+
+void KCSigHandler(int sigNum) {
+    if (gbl_state->debug)
+       printf("Received Signal %d\n",sigNum);
     switch (sigNum) {
         case SIGUSR1:
 	    KCSelectAlgothitm('c', gbl_state);
@@ -818,6 +846,20 @@ void KCSigUSRHandler(int sigNum) {
             break;
         case SIGHUP:
 	    KCSelectAlgothitm('q', gbl_state);
+            break;
+	case SIGINT:
+	case SIGTERM:
+	case SIGQUIT:
+	case SIGABRT:
+	    /* Reset SMC Min Speed before exit */
+	    if (gbl_state->debug)
+	       printf("Restoring SMC Fan Speed to default value.\n");
+            KCSelectAlgothitm('r', gbl_state);
+	    SMCSetFanSpeed(gbl_state);
+	    if (gbl_state->debug)
+	       printf("Bye.\n");
+	    smc_close();
+	    exit(0);
             break;
     }
 }
@@ -957,21 +999,21 @@ int main(int argc, char *argv[])
 
         case OP_RUNFOREVER:
 	    gbl_state = &kc_state;
-	    if (signal(SIGHUP, KCSigUSRHandler) == SIG_ERR)
-	        printf("\ncan't catch SIGHUP\n");
-	    if (signal(SIGUSR1, KCSigUSRHandler) == SIG_ERR)
-	        printf("\ncan't catch SIGUSR1\n");
-	    if (signal(SIGUSR2, KCSigUSRHandler) == SIG_ERR)
-	        printf("\ncan't catch SIGUSR2\n");
+            KCRegisterSignalHandler();
 
 	    SMCCountFans(&kc_state);
 	    while (OP_RUNFOREVER) {
 	        kc_state.cur_temp = SMCGetTemperature(kc_state.temp_key);
-	        if (kc_state.cur_temp == 0.0 ) {
+	        if (kc_state.cur_temp == KC_ERROR_READING_TEMP) {
                     printf("Error: SMCGetTemperature() can't read value\n");
 	            sleep(KC_UPDATE_PERIOD);
 		    continue;
-                }
+                } else if (kc_state.cur_temp >= KC_WAKEUP_IGNORE_TEMP) {
+	            if (kc_state.debug)
+	    	        printf("Ignoring Temperature reading (too high).. just awaken from stand-by?.\n");
+	            sleep(KC_UPDATE_PERIOD);
+		    continue;
+		}
 
 	        if (kc_state.debug)
 	    	    printf("\nCurrent temperature: %.2fºC\n", kc_state.cur_temp);

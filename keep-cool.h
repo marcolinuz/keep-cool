@@ -80,6 +80,8 @@
 #define KC_DEF_MIN_TEMP	 	60
 #define KC_DEF_MAX_TEMP	 	92
 #define KC_DEF_TEMP_KEY	 	"TCXC"
+#define KC_ERROR_READING_TEMP   0.0
+#define KC_WAKEUP_IGNORE_TEMP   120.0
 
 
 typedef struct {
@@ -157,7 +159,8 @@ kern_return_t SMCOpen(io_connect_t *conn);
 kern_return_t SMCClose(io_connect_t conn);
 kern_return_t SMCReadKey2(UInt32Char_t key, SMCVal_t *val,io_connect_t conn);
 
-void KCSigUSRHandler(int);
+void KCRegisterSignalHandler();
+void KCSigHandler(int);
 void KCSelectAlgothitm(char, KC_Status_t *);
 double SMCGetTemperature(char *);
 kern_return_t SMCCountFans(KC_Status_t *);
@@ -167,3 +170,4 @@ UInt16 KCLinearSpeedAlghoritm(void *);
 UInt16 KCLogarithmicSpeedAlghoritm(void *);
 UInt16 KCQuadraticSpeedAlghoritm(void *);
 UInt16 KCCubicSpeedAlghoritm(void *);
+UInt16 KCResetSpeedAlghoritm(void *);
