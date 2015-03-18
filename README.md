@@ -30,6 +30,8 @@ keep-cool [options]
                       the quiet and conservative approaches
   -d         : enable debug mode, dump internal state and values
   -f         : run forever (runs as daemon)
+  -g         : generates in the current directory the plist file required to
+               run as service using the same arguments passed from command line
   -h         : prints this help
   -l         : dump fan info decoded
   -L         : list all SMC temperature sensors keys and values
@@ -60,11 +62,11 @@ make
 
 ### Installing
 
-Remember to install it using an Administrator's account. 
+Remember to install keep-cool using an Administrator's account. 
 The installer needs to write 2 files outside of your home directory.
 
 ```bash
-sudo make install #Installs on /usr/local/sbin
+sudo make install 
 ```
 
 ### Uninstalling
