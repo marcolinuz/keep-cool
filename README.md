@@ -13,6 +13,9 @@ run as a service at system startup.
 
 ## Usage 
 
+You can quickly learn how to use keep-cool on your Mac by following
+this simple video tutorial: http://youtu.be/SLeW_hbDjNQ
+
 ```bash
 keep-cool [options]
   -a <alg>   : selects fan speed computing alghoritm: (default is quadratic)
