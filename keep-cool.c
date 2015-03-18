@@ -577,6 +577,8 @@ void usage(char* prog)
     printf("                      the quiet and conservative approaches\n");
     printf("  -d         : enable debug mode, dump internal state and values\n");
     printf("  -f         : run forever (runs as daemon)\n");
+    printf("  -g         : generates in the current directory the plist file required to\n");
+    printf("               run as service using the same arguments passed from command line\n");
     printf("  -h         : prints this help\n");
     printf("  -l         : dump fan info decoded\n");
     printf("  -L         : list all SMC temperature sensors keys and values\n");
@@ -864,6 +866,53 @@ void KCSigHandler(int sigNum) {
     }
 }
 
+kern_return_t KCDumpOptions(FILE *fp, KC_Status_t *state) {
+	kern_return_t retVal = 0;
+
+	if (strncmp(state->temp_key, KC_DEF_TEMP_KEY, sizeof(UInt32Char_t)) != 0) {
+		fprintf(fp,"%s-T%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+		fprintf(fp,"%s%s%s",KC_PLIST_PRE_ARGUMENT,state->temp_key,KC_PLIST_POST_ARGUMENT);
+	}
+
+	if (state->min_temp != KC_DEF_MIN_TEMP) {
+		fprintf(fp,"%s-m%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+		fprintf(fp,"%s%d%s",KC_PLIST_PRE_ARGUMENT,state->min_temp,KC_PLIST_POST_ARGUMENT);
+	}
+
+	if (state->max_temp != KC_DEF_MAX_TEMP) {
+		fprintf(fp,"%s-M%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+		fprintf(fp,"%s%d%s",KC_PLIST_PRE_ARGUMENT,state->max_temp,KC_PLIST_POST_ARGUMENT);
+	}
+
+	if (state->compute_fan_speed == &KCLinearSpeedAlghoritm) {
+		fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+		fprintf(fp,"%ss%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+	} else if (state->compute_fan_speed == &KCLogarithmicSpeedAlghoritm) {
+		fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+		fprintf(fp,"%sc%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+	} else if (state->compute_fan_speed == &KCCubicSpeedAlghoritm) {
+		fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+		fprintf(fp,"%sb%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+	} 
+	return retVal;
+}
+
+kern_return_t KCWritePlistFile(KC_Status_t *state) {
+    kern_return_t retVal = 1;
+    FILE *fp;
+    fp = fopen(KC_PLIST_FILENAME, "w+");
+    if (fp == NULL) {
+    	return retVal;
+    }
+
+    fprintf(fp, KC_PLIST_HEADER);
+    retVal = KCDumpOptions(fp, state);
+    fprintf(fp, KC_PLIST_FOOTER);
+    fclose(fp);
+
+    return retVal;
+}
+
 int main(int argc, char *argv[])
 {
     int c;
@@ -886,7 +935,7 @@ int main(int argc, char *argv[])
 			     (char)0,
 			     &KCQuadraticSpeedAlghoritm};
 
-    while ((c = getopt(argc, argv, "a:Lls:nrfvdtT:m:M:")) != -1)
+    while ((c = getopt(argc, argv, "a:Lls:nrfvdtT:m:M:g")) != -1)
     {
         switch(c)
         {
@@ -901,6 +950,9 @@ int main(int argc, char *argv[])
                 break;
 	    case 't':
 	        op = OP_READ_TEMP;
+		break;
+            case 'g':
+	        op = OP_GENERATE_PLIST;
 		break;
             case 's':
 	    	op = OP_SIMULATE;
@@ -966,18 +1018,26 @@ int main(int argc, char *argv[])
 	    if (kc_state.cur_temp == 0.0 )
                     printf("Error: SMCGetTemperature() can't read value\n");
             else
-		    printf("Temperature: %.2fºC\n",kc_state.cur_temp);
+		    printf("SMC Sensor %s: Temperature = %.2fºC\n",kc_state.temp_key,kc_state.cur_temp);
+	    break;
+	
+	case OP_GENERATE_PLIST:
+	    result = KCWritePlistFile(&kc_state);
+	    if (result)
+                    printf("Error: KCWritePlistFile() can't write file %s\n", KC_PLIST_FILENAME);
+            else
+		    printf("File %s written succesfully\nNow run \"sudo make install\" in order to install the service.\n",KC_PLIST_FILENAME);
 	    break;
 
         case OP_RUNONCE:
 	    kc_state.cur_temp = SMCGetTemperature(kc_state.temp_key);
 	    if (kc_state.cur_temp == 0.0 ) {
-                    printf("Error: SMCGetTemperature() can't read value\n");
+                    printf("Error: SMCGetTemperature() can't read value from sensor %s\n",kc_state.temp_key);
 		    break;
             }
         case OP_SIMULATE:
 	    if (kc_state.debug)
-	    	printf("Current temperature: %.2fºC\n", kc_state.cur_temp);
+	    	printf("Sensor %s, current temperature: %.2fºC\n",kc_state.temp_key, kc_state.cur_temp);
 
 	    result = SMCCountFans(&kc_state);
             if (result != kIOReturnSuccess)
@@ -1010,13 +1070,13 @@ int main(int argc, char *argv[])
 		    continue;
                 } else if (kc_state.cur_temp >= KC_WAKEUP_IGNORE_TEMP) {
 	            if (kc_state.debug)
-	    	        printf("Ignoring Temperature reading (too high).. just awaken from stand-by?.\n");
+	    	        printf("Ignoring Temperature reading from sensor %s (too high)\n..just awaken from stand-by?.\n",kc_state.temp_key);
 	            sleep(KC_UPDATE_PERIOD);
 		    continue;
 		}
 
 	        if (kc_state.debug)
-	    	    printf("\nCurrent temperature: %.2fºC\n", kc_state.cur_temp);
+	    	    printf("\nSensor %s, current temperature: %.2fºC\n",kc_state.temp_key, kc_state.cur_temp);
 
 	        result = SMCCountFans(&kc_state);
                 if (result != kIOReturnSuccess)

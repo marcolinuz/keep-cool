@@ -32,6 +32,7 @@
 #define OP_SIMULATE           4 
 #define OP_RUNONCE            5
 #define OP_RUNFOREVER         6
+#define OP_GENERATE_PLIST     7
 
 #define KERNEL_INDEX_SMC      2
 
@@ -82,6 +83,12 @@
 #define KC_DEF_TEMP_KEY	 	"TCXC"
 #define KC_ERROR_READING_TEMP   0.0
 #define KC_WAKEUP_IGNORE_TEMP   120.0
+
+#define KC_PLIST_FILENAME	"m.c.m.keepcool.plist"
+#define KC_PLIST_HEADER		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>Disabled</key>\n\t<false/>\n\t<key>GroupName</key>\n\t<string>wheel</string>\n\t<key>UserName</key>\n\t<string>root</string>\n\t<key>KeepAlive</key>\n\t<true/>\n\t<key>Label</key>\n\t<string>m.c.m.keepcool</string>\n\t<key>ProgramArguments</key>\n\t<array>\n\t<string>/usr/local/sbin/keep-cool</string>\n\t\t<string>-f</string>\n"
+#define KC_PLIST_PRE_ARGUMENT   "\t\t<string>"
+#define KC_PLIST_POST_ARGUMENT  "</string>\n"
+#define KC_PLIST_FOOTER         "\t</array>\n\t<key>RunAtLoad</key>\n\t<true/>\n</dict>\n</plist>"
 
 
 typedef struct {
@@ -163,6 +170,8 @@ void KCRegisterSignalHandler();
 void KCSigHandler(int);
 void KCSelectAlgothitm(char, KC_Status_t *);
 double SMCGetTemperature(char *);
+kern_return_t KCWritePlistFile(KC_Status_t *);
+kern_return_t KCDumpOptions(FILE *, KC_Status_t *);
 kern_return_t SMCCountFans(KC_Status_t *);
 kern_return_t SMCUpdateFans(KC_Status_t *);
 kern_return_t SMCSetFanSpeed(KC_Status_t *);
