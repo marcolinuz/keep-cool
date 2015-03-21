@@ -1005,7 +1005,7 @@ int main(int argc, char *argv[])
                 op = OP_RUNFOREVER;
                 break;
             case 'v':
-                printf("%s\n", VERSION);
+                printf("Keep-Cool - Version %s\n", VERSION);
                 return 0;
                 break;
 
