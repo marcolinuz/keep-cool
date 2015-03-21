@@ -31,6 +31,12 @@ keep-cool [options]
                       for mid-range temperatures and fastly for high 
                       temperatures, this is a _Balanced compromise between
                       the quiet and conservative approaches
+      i    -> i-cubic: speed increments slowly for lower temperatures, quickly
+                      for mid-range temperatures and slowly for high 
+                      temperatures. This can be seen as an Inverse-Balanced
+                      approach, cause it's still a compromise between the
+                      quiet and conservative approaches, though it tends to
+                      be more quiet, especially for low temperatures.
   -d         : enable debug mode, dump internal state and values
   -f         : run forever (runs as daemon)
   -g         : generates in the current directory the plist file required to
@@ -51,8 +57,16 @@ keep-cool [options]
 Note: When running as daemon keep-cool accepts 3 unix signals: SIGHUP, SIGUSR1 and SIGUSR2.
 These signals can switch on the fly the speed computing algorithm:
 * SIGHUP -> restores the default algorithm: quadratic
-* SIGUSR1 -> set the conservative algorithm: logarithmic
+* SIGUSR1 -> set the inverse-balanced algorithm: i-cubic
 * SIGUSR2 -> set the balanced algorithm: cubic
+
+### Release Notes.
+
+####Version 0.02 - 03/21/2015
+ * Introduced the inverse-balanced (inverse-cubic) algorithm.
+
+####Version 0.01 - 04/18/2015
+ * First published release.
 
 ### Compiling
 
