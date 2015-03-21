@@ -575,6 +575,12 @@ void usage(char* prog)
     printf("                      for mid-range temperatures and fastly for high \n");
     printf("                      temperatures, this is a _Balanced compromise between\n");
     printf("                      the quiet and conservative approaches\n");
+    printf("      i    -> i-cubic: speed increments slowly for lower temperatures, quickly\n");
+    printf("                      for mid-range temperatures and slowly for high \n");
+    printf("                      temperatures. This can be seen as an Inverse-Balanced\n");
+    printf("                      approach, cause it's still a compromise between the\n");
+    printf("                      quiet and conservative approaches, though it tends to\n");
+    printf("                      be more quiet, especially for low temperatures.\n");
     printf("  -d         : enable debug mode, dump internal state and values\n");
     printf("  -f         : run forever (runs as daemon)\n");
     printf("  -g         : generates in the current directory the plist file required to\n");
@@ -717,9 +723,8 @@ UInt16 KCLinearSpeedAlghoritm(void *structure) {
     } else if (curTemp > maxTemp) {
 	newSpeed = KC_FAN_MAX_SPEED;
     } else {
-	double delta_v = (double)KC_FAN_MAX_SPEED-(double)KC_FAN_MIN_SPEED;
 	double delta_t = maxTemp-minTemp;
-	double increment = (curTemp-minTemp)*(delta_v/delta_t);
+	double increment = (curTemp-minTemp)*(state->delta_v/delta_t);
 	newSpeed = (UInt16)(KC_FAN_MIN_SPEED + (UInt32)increment);
     } 
     return newSpeed;
@@ -737,9 +742,8 @@ UInt16 KCLogarithmicSpeedAlghoritm(void *structure) {
     } else if (curTemp > maxTemp) {
 	newSpeed = KC_FAN_MAX_SPEED;
     } else {
-	double delta_v = (double)KC_FAN_MAX_SPEED-(double)KC_FAN_MIN_SPEED;
 	double delta_t = maxTemp-minTemp;
-	double increment = (delta_v/2.0)*(2.0+log10((curTemp-minTemp)/delta_t));
+	double increment = (state->delta_v/2.0)*(2.0+log10((curTemp-minTemp)/delta_t));
 	newSpeed = (UInt16)(KC_FAN_MIN_SPEED + (UInt32)increment);
     } 
     return newSpeed;
@@ -757,9 +761,8 @@ UInt16 KCQuadraticSpeedAlghoritm(void *structure) {
     } else if (curTemp > maxTemp) {
 	newSpeed = KC_FAN_MAX_SPEED;
     } else {
-	double delta_v = sqrt((double)KC_FAN_MAX_SPEED-(double)KC_FAN_MIN_SPEED);
 	double delta_t = maxTemp-minTemp;
-	double increment = pow((curTemp-minTemp)*(delta_v/delta_t),2);
+	double increment = pow((curTemp-minTemp)*(sqrt(state->delta_v)/delta_t),2);
 	newSpeed = (UInt16)(KC_FAN_MIN_SPEED + (UInt32)increment);
     } 
     return newSpeed;
@@ -777,11 +780,36 @@ UInt16 KCCubicSpeedAlghoritm(void *structure) {
     } else if (curTemp > maxTemp) {
 	newSpeed = KC_FAN_MAX_SPEED;
     } else {
-	double delta_v = ((double)KC_FAN_MAX_SPEED-(double)KC_FAN_MIN_SPEED);
 	double delta_t = maxTemp-minTemp;
-	double increment = (delta_v/2.0)*(1.0+pow(((2.0*(curTemp-minTemp))/delta_t)-1.0,3));
+	double increment = (state->delta_v/2.0)*(1.0+pow(((2.0*(curTemp-minTemp))/delta_t)-1.0,3));
 	newSpeed = (UInt16)(KC_FAN_MIN_SPEED + (UInt32)increment);
     } 
+    return newSpeed;
+}
+
+UInt16 KCInverseCubicSpeedAlghoritm(void *structure) {
+    KC_Status_t	*state = (KC_Status_t *)structure;
+    double curTemp = state->cur_temp;
+    double minTemp = (double)state->min_temp;
+    double maxTemp = (double)state->max_temp;
+    UInt16 newSpeed = KC_SMC_DEF_SPEED;
+
+    if (curTemp <= minTemp ) {
+	newSpeed = KC_SMC_DEF_SPEED;
+    } else if (curTemp > maxTemp) {
+	newSpeed = KC_FAN_MAX_SPEED;
+    } else { 
+        double delta_t = maxTemp-minTemp;
+        double half_t = delta_t/2.0;
+	double temp_idx = curTemp-minTemp;
+        if (temp_idx <= half_t) {
+	    double increment = (state->delta_v/2.0)*(pow(((2.0*temp_idx)/delta_t),3));
+	    newSpeed = (UInt16)(KC_FAN_MIN_SPEED + (UInt32)increment);
+        } else {
+	    double increment = (state->delta_v/2.0)*(2.0+pow(((2.0*temp_idx)/delta_t)-2.0,3));
+	    newSpeed = (UInt16)(KC_FAN_MIN_SPEED + (UInt32)increment);
+	}
+    }
     return newSpeed;
 }
 
@@ -810,6 +838,11 @@ void KCSelectAlgothitm(char alg, KC_Status_t *state) {
 	    state->compute_fan_speed=&KCCubicSpeedAlghoritm;
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: cubic (Balanced)\n");
+            break;
+        case 'i':
+	    state->compute_fan_speed=&KCInverseCubicSpeedAlghoritm;
+	    if (state->debug)
+		printf("Selected Speed Computing Algorithm: cosine (I-Balanced)\n");
             break;
         case 'r':
 	    state->compute_fan_speed=&KCResetSpeedAlghoritm;
@@ -841,7 +874,7 @@ void KCSigHandler(int sigNum) {
        printf("Received Signal %d\n",sigNum);
     switch (sigNum) {
         case SIGUSR1:
-	    KCSelectAlgothitm('c', gbl_state);
+	    KCSelectAlgothitm('i', gbl_state);
             break;
         case SIGUSR2:
 	    KCSelectAlgothitm('b', gbl_state);
@@ -893,7 +926,10 @@ kern_return_t KCDumpOptions(FILE *fp, KC_Status_t *state) {
 	} else if (state->compute_fan_speed == &KCCubicSpeedAlghoritm) {
 		fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
 		fprintf(fp,"%sb%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
-	} 
+	} else if (state->compute_fan_speed == &KCInverseCubicSpeedAlghoritm) {
+                fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+                fprintf(fp,"%si%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+        }
 	return retVal;
 }
 
@@ -925,6 +961,7 @@ int main(int argc, char *argv[])
        			     KC_DEF_MIN_TEMP, 
 			     KC_DEF_MAX_TEMP, 
 			     KC_DEF_MIN_TEMP/2.0, 
+			     (double)(KC_FAN_MAX_SPEED-KC_FAN_MIN_SPEED),
 			     0,
                              { {KC_SMC_DEF_SPEED,0}, 
 			       {KC_SMC_DEF_SPEED,0}, 
@@ -999,7 +1036,6 @@ int main(int argc, char *argv[])
     }
     
     smc_init();
-    
     switch(op)
     {
         case OP_LIST:

@@ -23,7 +23,7 @@
 #define __SMC_H__
 #endif
 
-#define VERSION               "0.01"
+#define VERSION               "0.02"
 
 #define OP_NONE               0
 #define OP_LIST               1
@@ -146,6 +146,7 @@ typedef struct {
   UInt32                  min_temp;
   UInt32                  max_temp;
   double		  cur_temp;
+  double                  delta_v;
   UInt32		  num_fans;
   KC_FanState_t		  fan[KC_MAX_FANS];
   char			  debug;
@@ -179,4 +180,5 @@ UInt16 KCLinearSpeedAlghoritm(void *);
 UInt16 KCLogarithmicSpeedAlghoritm(void *);
 UInt16 KCQuadraticSpeedAlghoritm(void *);
 UInt16 KCCubicSpeedAlghoritm(void *);
+UInt16 KCInverseCubicSpeedAlghoritm(void *);
 UInt16 KCResetSpeedAlghoritm(void *);
