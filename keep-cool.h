@@ -23,7 +23,7 @@
 #define __SMC_H__
 #endif
 
-#define VERSION               "0.04"
+#define VERSION               "0.5.0"
 
 #define OP_NONE               0
 #define OP_LIST               1
@@ -78,6 +78,8 @@
 #define KC_FAN_MIN_SPEED     	2000
 #define KC_FAN_MAX_SPEED     	6200
 #define KC_SMC_DEF_SPEED     	0
+#define KC_ABS_MIN_TEMP		30
+#define KC_ABS_MAX_TEMP		120
 #define KC_DEF_MIN_TEMP	 	60
 #define KC_DEF_MAX_TEMP	 	92
 #define KC_DEF_TEMP_KEY	 	"TCXC"

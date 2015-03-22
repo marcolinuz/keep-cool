@@ -1110,9 +1110,17 @@ int main(int argc, char *argv[])
                 break;
             case 'm': 
                 kc_state.min_temp = strtol(optarg, NULL, 10);
+		if (kc_state.min_temp < KC_ABS_MIN_TEMP || kc_state.min_temp >= kc_state.max_temp) {
+                    printf("Error: inconsistent value for minimum temperature parameter\n");
+		    return 1;
+		}
                 break;
             case 'M': 
                 kc_state.max_temp = strtol(optarg, NULL, 10);
+		if (kc_state.max_temp < KC_ABS_MAX_TEMP || kc_state.max_temp <= kc_state.min_temp) {
+                    printf("Error: inconsistent value for Maximum temperature parameter\n");
+		    return 1;
+		}
                 break;
             
             default:
@@ -1154,7 +1162,7 @@ int main(int argc, char *argv[])
 	    if (result)
                     printf("Error: KCWritePlistFile() can't write file %s\n", KC_PLIST_FILENAME);
             else
-		    printf("File %s written succesfully\nNow run \"sudo make install\" in order to install the service.\n",KC_PLIST_FILENAME);
+		    printf("File %s generated succesfully\n",KC_PLIST_FILENAME);
 	    break;
 
         case OP_RUNONCE:
@@ -1199,7 +1207,7 @@ int main(int argc, char *argv[])
                     printf("Error: SMCGetTemperature() can't read value\n");
 	            usleep(KC_UPDATE_PERIOD);
 		    continue;
-                } else if (kc_state.cur_temp >= KC_WAKEUP_IGNORE_TEMP) {
+                } else if (kc_state.cur_temp > KC_WAKEUP_IGNORE_TEMP) {
 	            if (kc_state.debug)
 	    	        printf("Ignoring Temperature reading from sensor %s (too high)\n..just awaken from stand-by?.\n",kc_state.temp_key);
 	            usleep(KC_UPDATE_PERIOD);
