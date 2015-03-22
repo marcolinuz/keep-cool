@@ -662,7 +662,7 @@ kern_return_t SMCCountFans(KC_Status_t *state) {
         result = SMCReadKey("F0Mx", &val);
         if (result != kIOReturnSuccess)
             return kIOReturnError;
-        state->max_speed = _strtoul((char *)val.bytes, val.dataSize, 10);
+        state->max_speed = _strtoul((char *)val.bytes, val.dataSize, 10) >> 2;
 	state->delta_v = (double)(state->max_speed-KC_FAN_MIN_SPEED);
     }
 
