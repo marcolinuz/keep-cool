@@ -75,9 +75,8 @@
 
 #define KC_UPDATE_PERIOD        500000  /* 1000000 ms = 1 second */
 #define KC_MAX_FANS   		5
-#define KC_FAN_MIN_SPEED     	2000
-#define KC_FAN_MAX_SPEED     	6200
 #define KC_SMC_DEF_SPEED     	0
+#define KC_FAN_MIN_SPEED     	2000
 #define KC_ABS_MIN_TEMP		30
 #define KC_ABS_MAX_TEMP		120
 #define KC_DEF_MIN_TEMP	 	60
@@ -151,6 +150,7 @@ typedef struct {
   double		  cur_temp;
   double                  delta_v;
   UInt32		  num_fans;
+  UInt32	          max_speed;
   KC_FanState_t		  fan[KC_MAX_FANS];
   char			  debug;
   char			  dry_run;

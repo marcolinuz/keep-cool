@@ -656,10 +656,18 @@ kern_return_t SMCCountFans(KC_Status_t *state) {
     result = SMCReadKey("FNum", &val);
     if (result != kIOReturnSuccess)
         return kIOReturnError;
-    
     state->num_fans = _strtoul((char *)val.bytes, val.dataSize, 10);
+
+    if (state->num_fans > 0) {
+        result = SMCReadKey("F0Mx", &val);
+        if (result != kIOReturnSuccess)
+            return kIOReturnError;
+        state->max_speed = _strtoul((char *)val.bytes, val.dataSize, 10);
+	state->delta_v = (double)(state->max_speed-KC_FAN_MIN_SPEED);
+    }
+
     if (state->debug)
-	printf("Number of Fans: %d\n", state->num_fans);
+	printf("Number of Fans: %d (max speed %d rpm)\n", state->num_fans, state->max_speed);
     
     return kIOReturnSuccess;
 }
@@ -728,7 +736,7 @@ UInt16 KCLinearSpeedAlghoritm(void *structure) {
     if (curTemp <= minTemp ) {
 	newSpeed = KC_SMC_DEF_SPEED;
     } else if (curTemp > maxTemp) {
-	newSpeed = KC_FAN_MAX_SPEED;
+	newSpeed = state->max_speed;
     } else {
 	double delta_t = maxTemp-minTemp;
 	double increment = (curTemp-minTemp)*(state->delta_v/delta_t);
@@ -747,7 +755,7 @@ UInt16 KCLogarithmicSpeedAlghoritm(void *structure) {
     if (curTemp <= minTemp ) {
 	newSpeed = KC_SMC_DEF_SPEED;
     } else if (curTemp > maxTemp) {
-	newSpeed = KC_FAN_MAX_SPEED;
+	newSpeed = state->max_speed;
     } else {
 	double delta_t = maxTemp-minTemp;
 	double increment = (state->delta_v/2.0)*(2.0+log10((curTemp-minTemp)/delta_t));
@@ -766,7 +774,7 @@ UInt16 KCQuadraticSpeedAlghoritm(void *structure) {
     if (curTemp <= minTemp ) {
 	newSpeed = KC_SMC_DEF_SPEED;
     } else if (curTemp > maxTemp) {
-	newSpeed = KC_FAN_MAX_SPEED;
+	newSpeed = state->max_speed;
     } else {
 	double delta_t = maxTemp-minTemp;
 	double increment = pow((curTemp-minTemp)*(sqrt(state->delta_v)/delta_t),2);
@@ -785,7 +793,7 @@ UInt16 KCCubicSpeedAlghoritm(void *structure) {
     if (curTemp <= minTemp ) {
 	newSpeed = KC_SMC_DEF_SPEED;
     } else if (curTemp > maxTemp) {
-	newSpeed = KC_FAN_MAX_SPEED;
+	newSpeed = state->max_speed;
     } else {
 	double delta_t = maxTemp-minTemp;
 	double increment = (state->delta_v/2.0)*(1.0+pow(((2.0*(curTemp-minTemp))/delta_t)-1.0,3));
@@ -804,7 +812,7 @@ UInt16 KCInverseCubicSpeedAlghoritm(void *structure) {
     if (curTemp <= minTemp ) {
 	newSpeed = KC_SMC_DEF_SPEED;
     } else if (curTemp > maxTemp) {
-	newSpeed = KC_FAN_MAX_SPEED;
+	newSpeed = state->max_speed;
     } else { 
         double delta_t = maxTemp-minTemp;
         double half_t = delta_t/2.0;
@@ -830,7 +838,7 @@ UInt16 KCWaveSpeedAlghoritm(void *structure) {
     if (curTemp <= minTemp ) {
 	newSpeed = KC_SMC_DEF_SPEED;
     } else if (curTemp > maxTemp) {
-	newSpeed = KC_FAN_MAX_SPEED;
+	newSpeed = state->max_speed;
     } else { 
         double delta_t = maxTemp-minTemp;
         double third_t = delta_t/3.0;
@@ -1053,7 +1061,8 @@ int main(int argc, char *argv[])
        			     KC_DEF_MIN_TEMP, 
 			     KC_DEF_MAX_TEMP, 
 			     KC_DEF_MIN_TEMP/2.0, 
-			     (double)(KC_FAN_MAX_SPEED-KC_FAN_MIN_SPEED),
+			     0.0,
+			     0,
 			     0,
                              { {KC_SMC_DEF_SPEED,0}, 
 			       {KC_SMC_DEF_SPEED,0}, 
