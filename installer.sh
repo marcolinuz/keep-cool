@@ -130,3 +130,4 @@ chmod 775 ${PREFIX}/sbin
 cp ${PLIST} ${LAUNCHD}/${PLIST}
 chmod 644 ${LAUNCHD}/${PLIST}
 launchctl load -w ${LAUNCHD}/${PLIST}
+echo "done!"
