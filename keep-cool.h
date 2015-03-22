@@ -23,7 +23,7 @@
 #define __SMC_H__
 #endif
 
-#define VERSION               "0.03"
+#define VERSION               "0.04"
 
 #define OP_NONE               0
 #define OP_LIST               1
@@ -73,7 +73,7 @@
 
 #define DATATYPE_PWM          "{pwm"
 
-#define KC_UPDATE_PERIOD        1
+#define KC_UPDATE_PERIOD        500000  /* 1000000 ms = 1 second */
 #define KC_MAX_FANS   		5
 #define KC_FAN_MIN_SPEED     	2000
 #define KC_FAN_MAX_SPEED     	6200

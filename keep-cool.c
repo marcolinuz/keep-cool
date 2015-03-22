@@ -1197,12 +1197,12 @@ int main(int argc, char *argv[])
 	        kc_state.cur_temp = SMCGetTemperature(kc_state.temp_key);
 	        if (kc_state.cur_temp == KC_ERROR_READING_TEMP) {
                     printf("Error: SMCGetTemperature() can't read value\n");
-	            sleep(KC_UPDATE_PERIOD);
+	            usleep(KC_UPDATE_PERIOD);
 		    continue;
                 } else if (kc_state.cur_temp >= KC_WAKEUP_IGNORE_TEMP) {
 	            if (kc_state.debug)
 	    	        printf("Ignoring Temperature reading from sensor %s (too high)\n..just awaken from stand-by?.\n",kc_state.temp_key);
-	            sleep(KC_UPDATE_PERIOD);
+	            usleep(KC_UPDATE_PERIOD);
 		    continue;
 		}
 
@@ -1225,7 +1225,7 @@ int main(int argc, char *argv[])
                     if (result != kIOReturnSuccess)
                         printf("Error: SMCSetFanSpeed() = %08x\n", result);
 	        }
-	        sleep(KC_UPDATE_PERIOD);
+	        usleep(KC_UPDATE_PERIOD);
             }
             break;
     }
