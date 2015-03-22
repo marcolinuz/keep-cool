@@ -72,7 +72,7 @@ can be seen using the "console" application.
 
 ### Release Notes.
 
-####Version 0.04 - 03/23/2015
+####Version 0.04 - 03/22/2015
  * Changed the temperature polling interval from 1 second to 0.5 seconds in order to make the fan(s) speed transitions smoother.
 
 ####Version 0.03 - 03/22/2015
