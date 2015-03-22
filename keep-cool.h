@@ -23,7 +23,7 @@
 #define __SMC_H__
 #endif
 
-#define VERSION               "0.02"
+#define VERSION               "0.03"
 
 #define OP_NONE               0
 #define OP_LIST               1
@@ -84,6 +84,7 @@
 #define KC_ERROR_READING_TEMP   0.0
 #define KC_WAKEUP_IGNORE_TEMP   120.0
 
+#define KC_LOG_BUFSIZE		512
 #define KC_PLIST_FILENAME	"m.c.m.keepcool.plist"
 #define KC_PLIST_HEADER		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>Disabled</key>\n\t<false/>\n\t<key>GroupName</key>\n\t<string>wheel</string>\n\t<key>UserName</key>\n\t<string>root</string>\n\t<key>KeepAlive</key>\n\t<true/>\n\t<key>Label</key>\n\t<string>m.c.m.keepcool</string>\n\t<key>ProgramArguments</key>\n\t<array>\n\t<string>/usr/local/sbin/keep-cool</string>\n\t\t<string>-f</string>\n"
 #define KC_PLIST_PRE_ARGUMENT   "\t\t<string>"
@@ -170,6 +171,8 @@ kern_return_t SMCReadKey2(UInt32Char_t key, SMCVal_t *val,io_connect_t conn);
 void KCRegisterSignalHandler();
 void KCSigHandler(int);
 void KCSelectAlgothitm(char, KC_Status_t *);
+void KCSwitchAlgothitm(int, KC_Status_t *);
+void KCSysLog(int, char *);
 double SMCGetTemperature(char *);
 kern_return_t KCWritePlistFile(KC_Status_t *);
 kern_return_t KCDumpOptions(FILE *, KC_Status_t *);
@@ -181,4 +184,5 @@ UInt16 KCLogarithmicSpeedAlghoritm(void *);
 UInt16 KCQuadraticSpeedAlghoritm(void *);
 UInt16 KCCubicSpeedAlghoritm(void *);
 UInt16 KCInverseCubicSpeedAlghoritm(void *);
+UInt16 KCWaveSpeedAlghoritm(void *);
 UInt16 KCResetSpeedAlghoritm(void *);

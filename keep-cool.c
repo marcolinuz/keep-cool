@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <syslog.h>
 #include <math.h>
 #include <IOKit/IOKitLib.h>
 #include "keep-cool.h"
@@ -581,6 +582,12 @@ void usage(char* prog)
     printf("                      approach, cause it's still a compromise between the\n");
     printf("                      quiet and conservative approaches, though it tends to\n");
     printf("                      be more quiet, especially for low temperatures.\n");
+    printf("      w    -> wave: speed increments as a wave: slowly at low temperatures,\n");
+    printf("                      quickly and then slowly for mid-range temperatures and\n");
+    printf("                      and finally quickly again for very high temperatures.\n");
+    printf("                      This is a mathematical experiment that seems to have\n");
+    printf("                      a nice behavior. It's a \"smooth 3-steps\" approach with\n");
+    printf("                      quiet and conservative properties.\n");
     printf("  -d         : enable debug mode, dump internal state and values\n");
     printf("  -f         : run forever (runs as daemon)\n");
     printf("  -g         : generates in the current directory the plist file required to\n");
@@ -813,6 +820,32 @@ UInt16 KCInverseCubicSpeedAlghoritm(void *structure) {
     return newSpeed;
 }
 
+UInt16 KCWaveSpeedAlghoritm(void *structure) {
+    KC_Status_t	*state = (KC_Status_t *)structure;
+    double curTemp = state->cur_temp;
+    double minTemp = (double)state->min_temp;
+    double maxTemp = (double)state->max_temp;
+    UInt16 newSpeed = KC_SMC_DEF_SPEED;
+
+    if (curTemp <= minTemp ) {
+	newSpeed = KC_SMC_DEF_SPEED;
+    } else if (curTemp > maxTemp) {
+	newSpeed = KC_FAN_MAX_SPEED;
+    } else { 
+        double delta_t = maxTemp-minTemp;
+        double third_t = delta_t/3.0;
+	double temp_idx = curTemp-minTemp;
+        if (temp_idx <= third_t) {
+	    double increment = (state->delta_v/3.0)*(pow(((3.0*temp_idx)/delta_t),3));
+	    newSpeed = (UInt16)(KC_FAN_MIN_SPEED + (UInt32)increment);
+        } else {
+	    double increment = (state->delta_v/3.0)*(2.0+pow(((3.0*temp_idx)/delta_t)-2.0,3));
+	    newSpeed = (UInt16)(KC_FAN_MIN_SPEED + (UInt32)increment);
+	}
+    }
+    return newSpeed;
+}
+
 UInt16 KCResetSpeedAlghoritm(void *structure) {
     return (UInt16)KC_SMC_DEF_SPEED;
 }
@@ -823,33 +856,73 @@ void KCSelectAlgothitm(char alg, KC_Status_t *state) {
 	    state->compute_fan_speed=&KCLinearSpeedAlghoritm;
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: linear (Simple)\n");
+	    else
+	        KCSysLog(LOG_NOTICE, "Selected Speed Computing Algorithm: linear (Simple)");
             break;
         case 'c':
 	    state->compute_fan_speed=&KCLogarithmicSpeedAlghoritm;
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: logarithmic (Conservative)\n");
+	    else
+	        KCSysLog(LOG_NOTICE, "Selected Speed Computing Algorithm: logarithmic (Conservative)");
             break;
         case 'q':
 	    state->compute_fan_speed=&KCQuadraticSpeedAlghoritm;
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: quadratic (Quiet)\n");
+	    else
+ 	        KCSysLog(LOG_NOTICE, "Selected Speed Computing Algorithm: quadratic (Quiet)");
             break;
         case 'b':
 	    state->compute_fan_speed=&KCCubicSpeedAlghoritm;
 	    if (state->debug)
 		printf("Selected Speed Computing Algorithm: cubic (Balanced)\n");
+	    else
+ 	        KCSysLog(LOG_NOTICE, "Selected Speed Computing Algorithm: cubic (Balanced)");
             break;
         case 'i':
 	    state->compute_fan_speed=&KCInverseCubicSpeedAlghoritm;
 	    if (state->debug)
-		printf("Selected Speed Computing Algorithm: cosine (I-Balanced)\n");
+		printf("Selected Speed Computing Algorithm: i-cubic (I-Balanced)\n");
+	    else
+	        KCSysLog(LOG_NOTICE, "Selected Speed Computing Algorithm: i-cubic (I-Balanced)");
+            break;
+        case 'w':
+	    state->compute_fan_speed=&KCWaveSpeedAlghoritm;
+	    if (state->debug)
+		printf("Selected Speed Computing Algorithm: 3-Steps (Wave)\n");
+	    else
+	        KCSysLog(LOG_NOTICE, "Selected Speed Computing Algorithm: 3-Steps (Wave)");
             break;
         case 'r':
 	    state->compute_fan_speed=&KCResetSpeedAlghoritm;
 	    if (state->debug)
-		printf("Selected Reset Speed Computing Algorithm\n");
+		printf("Selected Reset Fan Speed Computing Algorithm\n");
             break;
     }
+}
+
+void KCSwitchAlgothitm(int signal, KC_Status_t *state) {
+    int     idx = 0;
+    char    algs[6] = {'q','s','c','b','i','w'};
+    void    *impl[6] = {&KCQuadraticSpeedAlghoritm,
+                        &KCLinearSpeedAlghoritm,
+			&KCLogarithmicSpeedAlghoritm,
+			&KCCubicSpeedAlghoritm,
+			&KCInverseCubicSpeedAlghoritm,
+			&KCWaveSpeedAlghoritm};
+    
+    while (impl[idx] != state->compute_fan_speed)
+    	idx++;
+    
+    switch (signal) {
+    	case SIGUSR1:
+	    KCSelectAlgothitm(algs[++idx%sizeof(algs)], gbl_state);
+	case SIGUSR2:
+	    KCSelectAlgothitm(algs[(--idx+sizeof(algs))%sizeof(algs)], gbl_state);
+	default:
+	    KCSelectAlgothitm(algs[idx], gbl_state);
+	}
 }
 
 void KCRegisterSignalHandler() {
@@ -870,14 +943,17 @@ void KCRegisterSignalHandler() {
 }
 
 void KCSigHandler(int sigNum) {
+    char    msg[KC_LOG_BUFSIZE];
+
+    sprintf(msg, "Received Signal %d\n",sigNum);
     if (gbl_state->debug)
-       printf("Received Signal %d\n",sigNum);
+        printf("%s",msg);
+    else
+        KCSysLog(LOG_NOTICE, msg);
     switch (sigNum) {
         case SIGUSR1:
-	    KCSelectAlgothitm('i', gbl_state);
-            break;
         case SIGUSR2:
-	    KCSelectAlgothitm('b', gbl_state);
+	    KCSwitchAlgothitm(sigNum, gbl_state);
             break;
         case SIGHUP:
 	    KCSelectAlgothitm('q', gbl_state);
@@ -893,6 +969,8 @@ void KCSigHandler(int sigNum) {
 	    SMCSetFanSpeed(gbl_state);
 	    if (gbl_state->debug)
 	       printf("Bye.\n");
+	    else
+	       KCSysLog(LOG_NOTICE, "Restored SMC default values, shutting down");
 	    smc_close();
 	    exit(0);
             break;
@@ -917,7 +995,10 @@ kern_return_t KCDumpOptions(FILE *fp, KC_Status_t *state) {
 		fprintf(fp,"%s%d%s",KC_PLIST_PRE_ARGUMENT,state->max_temp,KC_PLIST_POST_ARGUMENT);
 	}
 
-	if (state->compute_fan_speed == &KCLinearSpeedAlghoritm) {
+	if (state->compute_fan_speed == &KCQuadraticSpeedAlghoritm) {
+		fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+		fprintf(fp,"%sq%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+	} else if (state->compute_fan_speed == &KCLinearSpeedAlghoritm) {
 		fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
 		fprintf(fp,"%ss%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
 	} else if (state->compute_fan_speed == &KCLogarithmicSpeedAlghoritm) {
@@ -929,8 +1010,18 @@ kern_return_t KCDumpOptions(FILE *fp, KC_Status_t *state) {
 	} else if (state->compute_fan_speed == &KCInverseCubicSpeedAlghoritm) {
                 fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
                 fprintf(fp,"%si%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+	} else if (state->compute_fan_speed == &KCWaveSpeedAlghoritm) {
+                fprintf(fp,"%s-a%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+                fprintf(fp,"%sw%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
         }
 	return retVal;
+}
+
+void KCSysLog(int level, char *msg) {
+    setlogmask (LOG_UPTO (LOG_NOTICE));
+    openlog ("keep-cool", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_DAEMON);
+    syslog (level, "%s", msg);
+    closelog();
 }
 
 kern_return_t KCWritePlistFile(KC_Status_t *state) {
@@ -952,6 +1043,7 @@ kern_return_t KCWritePlistFile(KC_Status_t *state) {
 int main(int argc, char *argv[])
 {
     int c;
+    char	  msg[KC_LOG_BUFSIZE];
     extern char   *optarg;
     
     kern_return_t result;
@@ -1096,6 +1188,9 @@ int main(int argc, char *argv[])
         case OP_RUNFOREVER:
 	    gbl_state = &kc_state;
             KCRegisterSignalHandler();
+
+	    sprintf(msg, "Keep-Cool (Version %s) Started.",VERSION);  
+	    KCSysLog(LOG_NOTICE, msg);
 
 	    SMCCountFans(&kc_state);
 	    while (OP_RUNFOREVER) {
