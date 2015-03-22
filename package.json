@@ -1,6 +1,6 @@
 {
   "name": "keep-cool",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "repo": "mcm/keep-cool",
   "description": "Smart fan speed control for OSX",
   "keywords": ["osx", "cpu", "temperature", "sensors", "fan"],
