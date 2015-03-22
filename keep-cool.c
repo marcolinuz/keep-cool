@@ -1117,7 +1117,7 @@ int main(int argc, char *argv[])
                 break;
             case 'M': 
                 kc_state.max_temp = strtol(optarg, NULL, 10);
-		if (kc_state.max_temp < KC_ABS_MAX_TEMP || kc_state.max_temp <= kc_state.min_temp) {
+		if (kc_state.max_temp >= KC_ABS_MAX_TEMP || kc_state.max_temp <= kc_state.min_temp) {
                     printf("Error: inconsistent value for Maximum temperature parameter\n");
 		    return 1;
 		}
