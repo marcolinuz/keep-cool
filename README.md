@@ -16,6 +16,8 @@ run as a service at system startup.
 You can quickly learn how to use keep-cool on your Mac by following
 this simple video tutorial: http://youtu.be/SLeW_hbDjNQ
 
+Anyway, you dnon't need to know all the options if you run the installer script.
+
 ```bash
 keep-cool [options]
   -a <alg>   : selects fan speed computing alghoritm: (default is quadratic)
@@ -72,6 +74,10 @@ can be seen using the "console" application.
 
 ### Release Notes.
 
+####Version 0.5.0 - 03/22/2015
+ * Introduced an installer-wizard and an uninstaller scripts for systems without XCode tools installed
+ * Introduced a simple test to prevent inconsistent min and max temperature values
+
 ####Version 0.04 - 03/22/2015
  * Changed the temperature polling interval from 1 second to 0.5 seconds in order to make the fan(s) speed transitions smoother.
 
@@ -101,12 +107,12 @@ Remember to install keep-cool using an Administrator's account.
 The installer needs to write 2 files outside of your home directory.
 
 ```bash
-sudo make install 
+sudo ./installer.sh 
 ```
 
 ### Uninstalling
 ```bash
-sudo make uninstall
+sudo ./uninstaller.sh
 ```
 
 ### Running
