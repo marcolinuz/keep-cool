@@ -143,4 +143,5 @@ install -d ${PREFIX}/sbin
 install ${EXEC} ${PREFIX}/sbin
 install -m 0644 ${PLIST} ${LAUNCHD}/${PLIST}
 launchctl load -w ${LAUNCHD}/${PLIST}
-echo "Complete!"
+echo "done"
+echo "Installation Complete!"
