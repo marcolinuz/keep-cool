@@ -75,6 +75,11 @@ can be seen using the "console" application.
 
 ### Release Notes.
 
+####Version 0.6.0 - 03/23/2015
+ * Introduced a function that automatically guesses the CPU sensor's name 
+ * Improved the installer script, now it suggests the sensor to monitor to the user
+ * Improved the uninstaller, now it checks if keep-cool is actually installed
+
 ####Version 0.5.0 - 03/22/2015
  * Introduced an installer-wizard and an uninstaller scripts for systems without XCode tools installed
  * Introduced a simple test to prevent inconsistent min and max temperature values
