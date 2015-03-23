@@ -602,7 +602,7 @@ void usage(char* prog)
     printf("  -s <value> : simulates temperature read as value (for testing purposes)\n");
     printf("  -t         : print current temperature\n");
     printf("  -T <key>   : uses the provided key as temperature sensor. If you specify '?',\n");
-    printf("             : then keep-cool will find and use the one wih the highest temperature\n");
+    printf("             : then keep-cool will try to guess which is the CPU sensor\n");
     printf("  -v         : print version\n");
     printf("\n");
 }

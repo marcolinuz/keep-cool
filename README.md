@@ -59,7 +59,7 @@ keep-cool [options]
   -s <value> : simulates temperature read as value (for testing purposes)
   -t         : print current temperature
   -T <key>   : uses the provided key as temperature sensor. If you specify '?',
-             : then keep-cool will find and use the one wih the highest temperature
+             : then keep-cool will try to guess which is the CPU sensor
   -v         : print version
 ```
 
