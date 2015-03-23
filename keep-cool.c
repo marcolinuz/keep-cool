@@ -601,7 +601,8 @@ void usage(char* prog)
     printf("  -r         : run once and exits\n");
     printf("  -s <value> : simulates temperature read as value (for testing purposes)\n");
     printf("  -t         : print current temperature\n");
-    printf("  -T <key>   : uses the key as sensor for the temperature (default \"%s\")\n", KC_DEF_TEMP_KEY);
+    printf("  -T <key>   : uses the provided key as temperature sensor. If you specify '?',\n");
+    printf("             : then keep-cool will find and use the one wih the highest temperature\n");
     printf("  -v         : print version\n");
     printf("\n");
 }
@@ -724,6 +725,48 @@ kern_return_t SMCSetFanSpeed(KC_Status_t *state) {
 	}
     }
     return result;
+}
+
+kern_return_t KCFindCPUSensor(KC_Status_t *state) {
+    kern_return_t result;
+    SMCKeyData_t  inputStructure;
+    SMCKeyData_t  outputStructure;
+    double        cur_temp, max_temp;
+    
+    int           totalKeys, i;
+    UInt32Char_t  key;
+    SMCVal_t      val;
+    
+    totalKeys = SMCReadIndexCount();
+    for (i = 0; i < totalKeys; i++)
+    {
+        memset(&inputStructure, 0, sizeof(SMCKeyData_t));
+        memset(&outputStructure, 0, sizeof(SMCKeyData_t));
+        memset(&val, 0, sizeof(SMCVal_t));
+        
+        inputStructure.data8 = SMC_CMD_READ_INDEX;
+        inputStructure.data32 = i;
+        
+        result = SMCCall(KERNEL_INDEX_SMC, &inputStructure, &outputStructure);
+        if (result != kIOReturnSuccess)
+            continue;
+        
+        _ultostr(key, outputStructure.key);
+        
+	if (key[0] == 'T' && key[1] == 'C' && key[3] == 'C') {
+	    cur_temp = SMCGetTemperature(key);
+	    if (cur_temp >= max_temp) {
+	        max_temp = cur_temp;
+                strncpy(state->temp_key, key, sizeof(state->temp_key));   //fix for buffer overflow
+                state->temp_key[sizeof(state->temp_key) - 1] = '\0';
+	    }
+	}
+    }
+
+    if (state->debug)
+        printf("Using \"%s\" as CPU Temperature Sensor\n",state->temp_key);
+    
+    return kIOReturnSuccess;
 }
 
 UInt16 KCLinearSpeedAlghoritm(void *structure) {
@@ -988,10 +1031,8 @@ void KCSigHandler(int sigNum) {
 kern_return_t KCDumpOptions(FILE *fp, KC_Status_t *state) {
 	kern_return_t retVal = 0;
 
-	if (strncmp(state->temp_key, KC_DEF_TEMP_KEY, sizeof(UInt32Char_t)) != 0) {
-		fprintf(fp,"%s-T%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
-		fprintf(fp,"%s%s%s",KC_PLIST_PRE_ARGUMENT,state->temp_key,KC_PLIST_POST_ARGUMENT);
-	}
+	fprintf(fp,"%s-T%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
+	fprintf(fp,"%s%s%s",KC_PLIST_PRE_ARGUMENT,state->temp_key,KC_PLIST_POST_ARGUMENT);
 
 	if (state->min_temp != KC_DEF_MIN_TEMP) {
 		fprintf(fp,"%s-m%s",KC_PLIST_PRE_ARGUMENT,KC_PLIST_POST_ARGUMENT);
@@ -1057,7 +1098,7 @@ int main(int argc, char *argv[])
     kern_return_t result;
     int           op = OP_NONE;
 
-    KC_Status_t kc_state = { KC_DEF_TEMP_KEY, 
+    KC_Status_t kc_state = { "?", 
        			     KC_DEF_MIN_TEMP, 
 			     KC_DEF_MAX_TEMP, 
 			     KC_DEF_MIN_TEMP/2.0, 
@@ -1145,6 +1186,14 @@ int main(int argc, char *argv[])
     }
     
     smc_init();
+    if (kc_state.temp_key[0] == '?') {
+        result = KCFindCPUSensor(&kc_state);
+        if (result != kIOReturnSuccess) {
+             printf("Error: KCFindCPUSensor() = %08x\n", result);
+             return 1;
+	}
+    }
+
     switch(op)
     {
         case OP_LIST:

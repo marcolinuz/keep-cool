@@ -23,7 +23,7 @@
 #define __SMC_H__
 #endif
 
-#define VERSION               "0.5.0"
+#define VERSION               "0.6.0"
 
 #define OP_NONE               0
 #define OP_LIST               1
@@ -81,7 +81,6 @@
 #define KC_ABS_MAX_TEMP		120
 #define KC_DEF_MIN_TEMP	 	60
 #define KC_DEF_MAX_TEMP	 	92
-#define KC_DEF_TEMP_KEY	 	"TCXC"
 #define KC_ERROR_READING_TEMP   0.0
 #define KC_WAKEUP_IGNORE_TEMP   120.0
 
@@ -176,6 +175,7 @@ void KCSelectAlgothitm(char, KC_Status_t *);
 void KCSwitchAlgothitm(int, KC_Status_t *);
 void KCSysLog(int, char *);
 double SMCGetTemperature(char *);
+kern_return_t KCFindCPUSensor(KC_Status_t *);
 kern_return_t KCWritePlistFile(KC_Status_t *);
 kern_return_t KCDumpOptions(FILE *, KC_Status_t *);
 kern_return_t SMCCountFans(KC_Status_t *);
