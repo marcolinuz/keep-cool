@@ -67,8 +67,8 @@ Note: When running as daemon keep-cool log its state in the system logs (syslog)
 It accepts 3 unix signals: SIGHUP, SIGUSR1 and SIGUSR2.
 These signals switch on the fly the speed computing algorithm:
 * SIGHUP -> restores the default algorithm: quadratic
-* SIGUSR1 -> selects the next algorithm following the sequence: q,s,c,b,i,w
-* SIGUSR2 -> selects the previous algorithm following the sequence: w,i,b,c,s,q
+* SIGUSR1 -> selects the next algorithm following the sequence: Quiet -> Simple -> Conservative -> Balanced -> Inverse Balanced -> Wave
+* SIGUSR2 -> selects the previous algorithm following the sequence: Wave -> Inverse Balanced -> Balanced -> Conservative -> Simpler -> Quiet
 
 The Selected algorithm is printed on the system.log (/var/log/system.log) and it 
 can be seen using the "console" application.
