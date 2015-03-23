@@ -23,7 +23,16 @@ LAUNCHD=/Library/LaunchDaemons
 
 # Uninstall keep-cool
 echo "Uninstalling ${EXEC} service.."
-launchctl unload -w ${LAUNCHD}/${PLIST}
-rm -f ${LAUNCHD}/${PLIST}
-rm -f ${PREFIX}/sbin/${EXEC}
-echo "done."
+if [ -f "${LAUNCHD}/${PLIST}" ]; then
+	echo -n "disabling service and removing plist file.. "
+	launchctl unload -w ${LAUNCHD}/${PLIST}
+	rm -f ${LAUNCHD}/${PLIST}
+	echo "done"
+fi
+
+if [ -f "${PREFIX}/sbin/${EXEC}" ]; then
+	echo -n "removing ${EXEC} executable from ${PREFIX}.. "
+	rm -f ${PREFIX}/sbin/${EXEC}
+	echo "done"
+fi
+echo "Complete."
