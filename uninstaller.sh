@@ -31,7 +31,7 @@ if [ -f "${LAUNCHD}/${PLIST}" ]; then
 fi
 
 if [ -f "${PREFIX}/sbin/${EXEC}" ]; then
-	echo -n "removing ${EXEC} executable from ${PREFIX}.. "
+	echo -n "removing ${EXEC} executable from ${PREFIX}/sbin.. "
 	rm -f ${PREFIX}/sbin/${EXEC}
 	echo "done"
 fi
