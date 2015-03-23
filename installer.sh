@@ -30,18 +30,34 @@ echo "Step 1: Find the right Temeperature sensor."
 echo "List sensors:"
 ./${EXEC} -L
 SENSORS=$(./${EXEC} -L | awk '{print $1}')
-NumSensors=$(./${EXEC} -L | wc -l | sed -e "s/[^0-9]//g")
-echo
-PS3="Which sensor should be monitored (1-${NumSensors})? "
-select opt in ${SENSORS}; do
-	isValid=$(echo ${SENSORS}|sed -e "s/.*\(${opt}\).*/\1/")
-	if [ -n "${isValid}" -a "${isValid}" = "${opt}" ]; then
-		Sensor=${opt}
-		break;
-	else
-		echo "Wrong choice.. retry."
-	fi
-done
+KC_Sensor=$(./${EXEC} -t | sed -e "s/.*\(TC..\).*/\1/")
+
+echo  
+echo -n "Use default sensor \"${KC_Sensor}\" (Y/n)? "
+read Answer
+
+if [ -z "${Answer}" -o "${Answer}" = "Y" -o "${Answer}" = "y" ]; then
+	Sensor=${KC_Sensor}
+else
+	numChoices=0
+	for s in ${SENSORS}; do
+		numChoices=$(( ${numChoices} + 1))
+	done
+	echo
+	PS3="Which sensor should be monitored (1-${numChoices})? "
+	select opt in ${SENSORS}; do
+		isValid=$(echo ${SENSORS}|sed -e "s/.*\(${opt}\).*/\1/")
+		if [ -n "${isValid}" -a "${isValid}" = "${opt}" ]; then
+			Sensor=${opt}
+			break;
+		elif [ -z "opt" ]; then
+			Sensor=${defaultChoice}
+			break
+		else
+			echo "Wrong choice.. retry."
+		fi
+	done
+fi
 echo "Okay, sensor ${Sensor} selected"
 
 echo
