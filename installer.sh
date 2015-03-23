@@ -33,10 +33,10 @@ SENSORS=$(./${EXEC} -L | awk '{print $1}')
 KC_Sensor=$(./${EXEC} -t | sed -e "s/.*\(TC..\).*/\1/")
 
 echo  
-echo -n "Use default sensor \"${KC_Sensor}\" (Y/n)? "
+echo -n "Do you want to use \"${KC_Sensor}\" as default sensor (Y/n)? "
 read Answer
 
-if [ -z "${Answer}" -o "${Answer}" = "Y" -o "${Answer}" = "y" ]; then
+if [ "${Answer}" -o "${Answer}" = "Y" -o "${Answer}" = "y" ]; then
 	Sensor=${KC_Sensor}
 else
 	numChoices=0
@@ -138,12 +138,9 @@ fi
 ${Command}
 
 echo
-echo "Step 5: Installing the service.."
-mkdir -p ${PREFIX}/sbin
-cp ${EXEC} ${PREFIX}/sbin
-chmod 775 ${PREFIX}/sbin
-
-cp ${PLIST} ${LAUNCHD}/${PLIST}
-chmod 644 ${LAUNCHD}/${PLIST}
+echo -n "Step 5: Installing the service.. "
+install -d ${PREFIX}/sbin
+install ${EXEC} ${PREFIX}/sbin
+install -m 0644 ${PLIST} ${LAUNCHD}/${PLIST}
 launchctl load -w ${LAUNCHD}/${PLIST}
 echo "done!"
