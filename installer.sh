@@ -33,10 +33,19 @@ SENSORS=$(./${EXEC} -L | awk '{print $1}')
 KC_Sensor=$(./${EXEC} -t | sed -e "s/.*\(TC..\).*/\1/")
 
 echo  
-echo -n "Do you want to use \"${KC_Sensor}\" as default sensor (Y/n)? "
-read Answer
-
-if [ "${Answer}" -o "${Answer}" = "Y" -o "${Answer}" = "y" ]; then
+while [ -z "${Answer}" ]; do
+	echo -n "Do you want to use \"${KC_Sensor}\" as default sensor (Y/n)? "
+	read userInput
+	case ${userInput} in
+		y|Y|Yes|yes)
+			Answer=y
+			;;
+		n|N|No|no)
+			Answer=n
+			;;
+	esac
+done
+if [ "${Answer}" = "y" ]; then
 	Sensor=${KC_Sensor}
 else
 	numChoices=0
