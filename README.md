@@ -58,7 +58,8 @@ keep-cool [options]
   -r         : run once and exits
   -s <value> : simulates temperature read as value (for testing purposes)
   -t         : print current temperature
-  -T <key>   : uses the key as sensor for the temperature (default "TCXC")
+  -T <key>   : uses the provided key as temperature sensor. If you specify '?',
+             : then keep-cool will find and use the one wih the highest temperature
   -v         : print version
 ```
 
