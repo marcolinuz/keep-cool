@@ -753,7 +753,7 @@ kern_return_t KCFindCPUSensor(KC_Status_t *state) {
         
         _ultostr(key, outputStructure.key);
         
-	if (key[0] == 'T' && key[1] == 'C' && key[3] == 'C') {
+	if (key[0] == 'T' && key[1] == 'C') {
 	    cur_temp = SMCGetTemperature(key);
 	    if (cur_temp >= max_temp) {
 	        max_temp = cur_temp;
