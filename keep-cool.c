@@ -758,10 +758,9 @@ kern_return_t KCFindCPUSensor(KC_Status_t *state) {
             if (state->debug)
                 printf("Sensor \"%s\", Temperature %.2f°C\n",key,cur_temp);
 	   
-	    if (cur_temp >= max_temp) {
+	    if (cur_temp >= max_temp && cur_temp < KC_WAKEUP_IGNORE_TEMP) {
 	        max_temp = cur_temp;
-                strncpy(state->temp_key, key, sizeof(state->temp_key));   //fix for buffer overflow
-                state->temp_key[sizeof(state->temp_key) - 1] = '\0';
+                strncpy(state->temp_key, key, sizeof(state->temp_key));  
 	    }
 	}
     }
