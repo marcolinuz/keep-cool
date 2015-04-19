@@ -1093,7 +1093,7 @@ kern_return_t KCWritePlistFile(KC_Status_t *state) {
 
 int main(int argc, char *argv[])
 {
-    int c;
+    int c, errors_count;
     char	  msg[KC_LOG_BUFSIZE];
     extern char   *optarg;
     
@@ -1264,36 +1264,64 @@ int main(int argc, char *argv[])
 	    while (OP_RUNFOREVER) {
 	        kc_state.cur_temp = SMCGetTemperature(kc_state.temp_key);
 	        if (kc_state.cur_temp == KC_ERROR_READING_TEMP) {
-                    printf("Error: SMCGetTemperature() can't read value\n");
-	            usleep(KC_UPDATE_PERIOD);
-		    continue;
+                    sprintf(msg,"Error: SMCGetTemperature() can't read value");
+		    KCSysLog(LOG_WARNING, msg);
+		    errors_count++;
+	            usleep(KC_UPDATE_DELAY);
+		    if (errors_count >= KC_ABORT_TRESHOLD) {
+		        KCSysLog(LOG_CRIT, "Too many SMC I/O errors.. aborting.");
+		    	KCSigHandler(SIGQUIT);
+		    } else {	
+		    	continue;
+                    }
                 } else if (kc_state.cur_temp > KC_WAKEUP_IGNORE_TEMP) {
 	            if (kc_state.debug)
 	    	        printf("Ignoring Temperature reading from sensor %s (too high)\n..just awaken from stand-by?.\n",kc_state.temp_key);
-	            usleep(KC_UPDATE_PERIOD);
-		    continue;
+		    errors_count++;
+	            usleep(KC_UPDATE_DELAY);
+		    if (errors_count >= KC_ABORT_TRESHOLD) {
+		        KCSysLog(LOG_CRIT, "Too many SMC I/O errors.. aborting.");
+		    	KCSigHandler(SIGQUIT);
+		    } else {	
+		    	continue;
+                    }
 		}
 
 	        if (kc_state.debug)
 	    	    printf("\nSensor %s, current temperature: %.2fºC\n",kc_state.temp_key, kc_state.cur_temp);
 
 	        result = SMCCountFans(&kc_state);
-                if (result != kIOReturnSuccess)
-                    printf("Error: SMCCountFans() = %08x\n", result);
+                if (result != kIOReturnSuccess) {
+		    errors_count++;
+                    sprintf(msg, "Error: SMCCountFans() = %08x\n", result);
+		    KCSysLog(LOG_WARNING, msg);
+		}
 
 	        result = SMCUpdateFans(&kc_state);
-                if (result != kIOReturnSuccess)
-                    printf("Error: SMCUpdateFans() = %08x\n", result);
+                if (result != kIOReturnSuccess) {
+		    errors_count++;
+                    sprintf(msg, "Error: SMCUpdateFans() = %08x\n", result);
+		    KCSysLog(LOG_WARNING, msg);
+		}
 
 	        if (kc_state.debug)
 	    	    printf("Computed new fan speed: %d\n", (*kc_state.compute_fan_speed)((void *)&kc_state));
 
                 if (!(kc_state.dry_run)) {
 		    result = SMCSetFanSpeed(&kc_state);
-                    if (result != kIOReturnSuccess)
-                        printf("Error: SMCSetFanSpeed() = %08x\n", result);
+                    if (result != kIOReturnSuccess) {
+                        sprintf(msg, "Error: SMCSetFanSpeed() = %08x\n", result);
+		        KCSysLog(LOG_WARNING, msg);
+			errors_count++;
+                    } else {
+		        errors_count = 0;
+                    }
 	        }
-	        usleep(KC_UPDATE_PERIOD);
+		if (errors_count >= KC_ABORT_TRESHOLD) {
+		    KCSysLog(LOG_CRIT, "Too many SMC I/O errors.. aborting.");
+		    KCSigHandler(SIGQUIT);
+	        }
+	        usleep(KC_UPDATE_DELAY);
             }
             break;
     }

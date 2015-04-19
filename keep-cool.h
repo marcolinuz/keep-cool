@@ -23,7 +23,7 @@
 #define __SMC_H__
 #endif
 
-#define VERSION               "1.0.0"
+#define VERSION               "1.0.1"
 
 #define OP_NONE               0
 #define OP_LIST               1
@@ -73,7 +73,7 @@
 
 #define DATATYPE_PWM          "{pwm"
 
-#define KC_UPDATE_PERIOD        500000  /* 1000000 ms = 1 second */
+#define KC_UPDATE_DELAY         500000  /* 1000000 ms = 1 second */
 #define KC_MAX_FANS   		5
 #define KC_SMC_DEF_SPEED     	0
 #define KC_FAN_MIN_SPEED     	2000
@@ -83,6 +83,7 @@
 #define KC_DEF_MAX_TEMP	 	92
 #define KC_ERROR_READING_TEMP   0.0
 #define KC_WAKEUP_IGNORE_TEMP   120.0
+#define KC_ABORT_TRESHOLD	20
 
 #define KC_LOG_BUFSIZE		512
 #define KC_PLIST_FILENAME	"m.c.m.keepcool.plist"
