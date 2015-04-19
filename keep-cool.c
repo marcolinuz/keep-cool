@@ -1267,7 +1267,7 @@ int main(int argc, char *argv[])
                     sprintf(msg,"Error: SMCGetTemperature() can't read value");
 		    KCSysLog(LOG_WARNING, msg);
 		    errors_count++;
-	            usleep(KC_UPDATE_DELAY);
+	            usleep(KC_UPDATE_DELAY*4);
 		    if (errors_count >= KC_ABORT_TRESHOLD) {
 		        KCSysLog(LOG_CRIT, "Too many SMC I/O errors.. aborting.");
 		    	KCSigHandler(SIGQUIT);
@@ -1278,7 +1278,7 @@ int main(int argc, char *argv[])
 	            if (kc_state.debug)
 	    	        printf("Ignoring Temperature reading from sensor %s (too high)\n..just awaken from stand-by?.\n",kc_state.temp_key);
 		    errors_count++;
-	            usleep(KC_UPDATE_DELAY);
+	            usleep(KC_UPDATE_DELAY*2);
 		    if (errors_count >= KC_ABORT_TRESHOLD) {
 		        KCSysLog(LOG_CRIT, "Too many SMC I/O errors.. aborting.");
 		    	KCSigHandler(SIGQUIT);
