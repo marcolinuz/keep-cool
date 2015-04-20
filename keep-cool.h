@@ -90,7 +90,7 @@
 #define KC_PLIST_HEADER		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>Disabled</key>\n\t<false/>\n\t<key>GroupName</key>\n\t<string>wheel</string>\n\t<key>UserName</key>\n\t<string>root</string>\n\t<key>KeepAlive</key>\n\t<true/>\n\t<key>Label</key>\n\t<string>m.c.m.keepcool</string>\n\t<key>ProgramArguments</key>\n\t<array>\n\t<string>/usr/local/sbin/keep-cool</string>\n\t\t<string>-f</string>\n"
 #define KC_PLIST_PRE_ARGUMENT   "\t\t<string>"
 #define KC_PLIST_POST_ARGUMENT  "</string>\n"
-#define KC_PLIST_FOOTER         "\t</array>\n\t<key>RunAtLoad</key>\n\t<true/>\n</dict>\n</plist>"
+#define KC_PLIST_FOOTER         "\t</array>\n\t<key>RunAtLoad</key>\n\t<true/>\n\t<key>ProcessType</key>\n\t<string>Background</string>\n</dict>\n</plist>"
 
 
 typedef struct {
