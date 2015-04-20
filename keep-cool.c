@@ -1093,7 +1093,7 @@ kern_return_t KCWritePlistFile(KC_Status_t *state) {
 
 int main(int argc, char *argv[])
 {
-    int c, errors_count;
+    int c, errors_count = 0;
     char	  msg[KC_LOG_BUFSIZE];
     extern char   *optarg;
     
@@ -1203,6 +1203,7 @@ int main(int argc, char *argv[])
             if (result != kIOReturnSuccess)
                 printf("Error: SMCPrintAll() = %08x\n", result);
             break;
+
         case OP_READ_FAN:
             result = SMCPrintFans();
             if (result != kIOReturnSuccess)
@@ -1231,6 +1232,7 @@ int main(int argc, char *argv[])
                     printf("Error: SMCGetTemperature() can't read value from sensor %s\n",kc_state.temp_key);
 		    break;
             }
+
         case OP_SIMULATE:
 	    if (kc_state.debug)
 	    	printf("Sensor %s, current temperature: %.2fºC\n",kc_state.temp_key, kc_state.cur_temp);
@@ -1269,8 +1271,9 @@ int main(int argc, char *argv[])
 		    errors_count++;
 	            usleep(KC_UPDATE_DELAY*4);
 		    if (errors_count >= KC_ABORT_TRESHOLD) {
-		        KCSysLog(LOG_CRIT, "Too many SMC I/O errors.. aborting.");
-		    	KCSigHandler(SIGQUIT);
+		        sprintf(msg, "Too many SMC I/O errors (%d).. aborting.", errors_count);
+		        KCSysLog(LOG_CRIT, msg);
+		    	KCSigHandler(SIGABRT);
 		    } else {	
 		    	continue;
                     }
@@ -1280,8 +1283,9 @@ int main(int argc, char *argv[])
 		    errors_count++;
 	            usleep(KC_UPDATE_DELAY*2);
 		    if (errors_count >= KC_ABORT_TRESHOLD) {
-		        KCSysLog(LOG_CRIT, "Too many SMC I/O errors.. aborting.");
-		    	KCSigHandler(SIGQUIT);
+		        sprintf(msg, "Too many SMC I/O errors (%d).. aborting.", errors_count);
+		        KCSysLog(LOG_CRIT, msg);
+		    	KCSigHandler(SIGABRT);
 		    } else {	
 		    	continue;
                     }
@@ -1289,13 +1293,6 @@ int main(int argc, char *argv[])
 
 	        if (kc_state.debug)
 	    	    printf("\nSensor %s, current temperature: %.2fºC\n",kc_state.temp_key, kc_state.cur_temp);
-
-	        result = SMCCountFans(&kc_state);
-                if (result != kIOReturnSuccess) {
-		    errors_count++;
-                    sprintf(msg, "Error: SMCCountFans() = %08x\n", result);
-		    KCSysLog(LOG_WARNING, msg);
-		}
 
 	        result = SMCUpdateFans(&kc_state);
                 if (result != kIOReturnSuccess) {
@@ -1317,10 +1314,12 @@ int main(int argc, char *argv[])
 		        errors_count = 0;
                     }
 	        }
+
 		if (errors_count >= KC_ABORT_TRESHOLD) {
 		    KCSysLog(LOG_CRIT, "Too many SMC I/O errors.. aborting.");
 		    KCSigHandler(SIGQUIT);
 	        }
+
 	        usleep(KC_UPDATE_DELAY);
             }
             break;
