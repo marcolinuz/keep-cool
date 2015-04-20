@@ -25,6 +25,20 @@ echo "# ############################## #"
 echo "# Installer script for ${EXEC} #"
 echo "# ############################## #"
 
+if [[ "${USER}" != "root" ]] ; then
+	echo
+	echo "The installer must run with root privileges."
+	echo "Please insert your password."
+	echo
+	sudo "${0}" 
+	if [ ${?} -eq 0 ]; then
+		exit 0
+	else
+		echo "Installation aborted."
+		exit 1
+	fi
+fi
+
 echo
 echo "Step 1: Find the right Temeperature sensor."
 echo "List sensors:"

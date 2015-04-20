@@ -21,6 +21,20 @@ PREFIX=/usr/local
 PLIST=m.c.m.keepcool.plist
 LAUNCHD=/Library/LaunchDaemons
 
+if [[ "${USER}" != "root" ]] ; then
+	echo
+	echo "The uninstaller must run with root privileges."
+	echo "Please insert your password."
+	echo
+	sudo "${0}" 
+	if [ ${?} -eq 0 ]; then
+		exit 0
+	else
+		echo "Operation aborted."
+		exit 1
+	fi
+fi
+
 # Uninstall keep-cool
 echo "Uninstalling ${EXEC} service.."
 if [ -f "${LAUNCHD}/${PLIST}" ]; then
