@@ -85,6 +85,7 @@ echo "Okay, sensor ${Sensor} selected"
 
 echo
 echo "Step 2: Select the Algorithm:"
+echo "( Details at https://github.com/marcolinuz/keep-cool/wiki )"
 ALGORITHMS="Simple Quiet Conservative Balanced I-Balanced Wave"
 PS3="Which algorithm should be used (1-6)? "
 select opt in ${ALGORITHMS}; do
