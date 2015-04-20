@@ -1191,7 +1191,9 @@ int main(int argc, char *argv[])
     if (kc_state.temp_key[0] == '?') {
         result = KCFindCPUSensor(&kc_state);
         if (result != kIOReturnSuccess) {
-             printf("Error: KCFindCPUSensor() = %08x\n", result);
+             sprintf(msg,"Error: KCFindCPUSensor() = %08x\n", result);
+             KCSysLog(LOG_CRIT, msg);
+	     printf("%s",msg);
              return 1;
 	}
     }
