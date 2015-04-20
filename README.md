@@ -77,6 +77,7 @@ can be seen using the "console" application.
 
 ####Version 1.0.1 - 04/19/2015
  * Improved the logging messages in case of errors
+ * Improved the installer and uninstaller script. Now they asks for user password if not running as superuser.
  * Introduced a counter that keeps track of the failed reading and if it exceeds the defined treshold, the daemon exits in order to allow the launchdaemon to restart it cleanly
 
 ####Version 1.0.0 - 03/23/2015
